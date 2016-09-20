@@ -52,13 +52,11 @@ class Board:
         self.puzzle[randint(0, self.n)]['tile_index'] = EMPTY
         return self.puzzle
 
-    # def printPuzzle(self, board):
-    #     for i in range(self.n):
-    #         row = '|'
-    #         for j in range(self.n):
-    #             if i*self.n + j < len(board):
-    #                 row += board[i*self.n + j] + '|'
-    #         print(row)
+    def printPuzzle(self):
+        for i in range(self.n):
+            tile_indexes = [str(self.puzzle[i*self.n + j]['tile_index'])
+                            for j in range(self.n)]
+            print('{1}{0}{1}'.format('|'.join(tile_indexes), '|'))
 
     def findEmpty(self):
         for i, piece in enumerate(self.puzzle):
@@ -69,7 +67,7 @@ class Board:
     def getMoves(self):
         empty = self.findEmpty()
         return empty, self.legal_moves[empty]
-    #
+
     # def makeMove(self, board, move):
     #     empty = self.findEmpty(board)
     #     if move in LEGAL_MOVES[empty]:
