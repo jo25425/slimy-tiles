@@ -1,10 +1,12 @@
 import sys
 import pygame_sdl2 as pygame
+from threading import Timer
 from Tile import Tile
+from Board import Board, EMPTY
 
 GRID_COLOR = (255, 255, 0)
 GRID_THICKNESS = 2
-TILES_PER_LINE = 4
+TILES_PER_LINE = 3
 IMAGE_SIZE = 512
 
 
@@ -21,6 +23,7 @@ class SlimyTiles:
         self.height = height
         self.tiles = [[None for x in range(TILES_PER_LINE)]
                       for y in range(TILES_PER_LINE)]
+        self.board = Board(TILES_PER_LINE)
 
         # Create the screen
         # set_mode(resolution=(0,0), flags=0, depth=0) -> Surface
@@ -28,7 +31,13 @@ class SlimyTiles:
 
     def go(self):
         '''This is the main game method'''
+
         self.make_tiles()
+        self.board.makePuzzle(self.tiles)
+
+        # Try out getting valid moves
+        empty_slot, valid_moves = self.board.getMoves()
+        print(empty_slot, valid_moves)
 
         # Create the background
         self.background = pygame.Surface(self.screen.get_size())
@@ -51,8 +60,9 @@ class SlimyTiles:
 
         self.draw_grid()
 
-        for row in self.tiles:
-            for tile in row:
+        for piece in self.board.puzzle:
+            if piece['tile_index'] != EMPTY:
+                tile = piece['tile']
                 self.screen.blit(tile.surface, tile.rect)
 
         pygame.display.flip()
