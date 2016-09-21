@@ -3,28 +3,21 @@ import pygame_sdl2 as pygame
 from Tile import Tile
 from Board import Board, EMPTY
 
-'''
-Important: For now, the input part of this only works for up to 3 tiles per row!
-In the future, will need to label possible moves and take those labels as input.
-'''
 
 if not pygame.font:
-    print('Warning: Pygame fonts disabled.')
+    print('Fatal Error: Pygame fonts disabled.')
+    sys.exit()
 
-KEY_TO_INT = {
-    pygame.K_0: 0,
-    pygame.K_1: 1,
-    pygame.K_2: 2,
-    pygame.K_3: 3,
-    pygame.K_4: 4,
-    pygame.K_5: 5,
-    pygame.K_6: 6,
-    pygame.K_7: 7,
-    pygame.K_8: 8,
-    pygame.K_9: 9
+KEY_TO_CHAR = {
+    pygame.K_a: 'a',
+    pygame.K_b: 'b',
+    pygame.K_c: 'c',
+    pygame.K_d: 'd'
 }
+BACKGROUND_COLOR = (0, 0, 0)
 GRID_COLOR = (255, 255, 0)
-TEXT_COLOR = (150, 220, 100)
+INSTRUCTIONS_COLOR = (150, 220, 100)
+LABELS_COLOR = (0, 0, 0)
 GRID_THICKNESS = 2
 TILES_PER_LINE = 3
 IMAGE_SIZE = 512
@@ -48,7 +41,9 @@ class SlimyTiles:
         self.tiles = [[None for x in range(TILES_PER_LINE)]
                       for y in range(TILES_PER_LINE)]
         self.board = Board(TILES_PER_LINE)
-        self.font = None
+
+        self.instructions_font = None
+        self.labels_font = None
 
         # Create the screen
         # set_mode(resolution=(0,0), flags=0, depth=0) -> Surface
@@ -63,13 +58,13 @@ class SlimyTiles:
         # Create the background
         self.background = pygame.Surface(self.screen.get_size())
         self.background = self.background.convert()
-        self.background.fill((0, 0, 0))
+        self.background.fill(BACKGROUND_COLOR)
 
-        # Define font
-        if pygame.font:
-            self.font = pygame.font.SysFont('silom', 24)
+        # Define fonts
+        self.instructions_font = pygame.font.SysFont('silom', 24)
+        self.labels_font = pygame.font.SysFont('impact', 80)
 
-        # Try out getting valid moves
+        # Initial valid moves
         empty_slot, valid_moves = self.board.getMoves()
         self.board.printPuzzle()
 
@@ -85,12 +80,10 @@ class SlimyTiles:
                    and event.key == pygame.K_ESCAPE:
                     sys.exit()
 
-                if event.type == pygame.KEYDOWN \
-                   and event.key in KEY_TO_INT \
-                   and KEY_TO_INT[event.key] in valid_moves:
-                        move = KEY_TO_INT[event.key]
-                        self.board.makeMove(move)
-
+                if event.type == pygame.KEYDOWN and event.key in KEY_TO_CHAR:
+                    move_index = self.label_to_int(KEY_TO_CHAR[event.key])
+                    if 0 <= move_index < len(valid_moves):
+                        self.board.makeMove(valid_moves[move_index])
                         empty_slot, valid_moves = self.board.getMoves()
                         self.board.printPuzzle()
                         changed = True
@@ -114,11 +107,24 @@ class SlimyTiles:
         self.draw_grid()
 
         # 4) Text
-        if self.font:
-            l = [str(m) for m in valid_moves]
-            s = 'You can move tile(s) ' + \
-                ' or '.join([', '.join(l[:-1]), l[-1]])
-            text = self.font.render(s, 1, TEXT_COLOR)
+        if pygame.font:
+
+            # On the grid: tile labels
+            labels = [self.int_to_label(i) for i in range(len(valid_moves))]
+            for l, m in zip(labels, valid_moves):
+                t = self.board.getTileFromPosition(m)
+                text = self.labels_font.render(l, True, LABELS_COLOR)
+                text_pos = text.get_rect(
+                    centerx=t.rect.x + t.rect.width/2,
+                    centery=t.rect.y + t.rect.height/2
+                )
+                self.screen.blit(text, text_pos)
+
+            # At the bottom: possible moves
+            s = 'You can move tiles ' + \
+                ' or '.join([', '.join(labels[:-1]), labels[-1]])
+            text = self.instructions_font.render(s, True, INSTRUCTIONS_COLOR,
+                                                 BACKGROUND_COLOR)
             text_pos = text.get_rect(
                 centerx=self.width / 2,
                 centery=self.height - TEXT_BOX_HEIGHT/2
@@ -126,6 +132,12 @@ class SlimyTiles:
             self.screen.blit(text, text_pos)
 
         pygame.display.flip()
+
+    def int_to_label(self, i):
+        return chr(i + ord('a'))
+
+    def label_to_int(self, c):
+        return ord(c) - ord('a')
 
     def make_tiles(self):
         tile_size = IMAGE_SIZE / TILES_PER_LINE

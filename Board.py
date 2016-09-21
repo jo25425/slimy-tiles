@@ -65,6 +65,9 @@ class Board:
                 return i
         return None
 
+    def getTileFromPosition(self, pos):
+        return self.puzzle[pos]['tile']
+
     def getMoves(self):
         empty = self.findEmpty()
         return empty, self.legal_moves[empty]
