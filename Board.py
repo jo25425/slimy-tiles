@@ -57,6 +57,7 @@ class Board:
             tile_indexes = [str(self.puzzle[i*self.n + j]['tile_index'])
                             for j in range(self.n)]
             print('{1}{0}{1}'.format('|'.join(tile_indexes), '|'))
+        print('')
 
     def findEmpty(self):
         for i, piece in enumerate(self.puzzle):
@@ -68,15 +69,17 @@ class Board:
         empty = self.findEmpty()
         return empty, self.legal_moves[empty]
 
-    # def makeMove(self, board, move):
-    #     empty = self.findEmpty(board)
-    #     if move in LEGAL_MOVES[empty]:
-    #         board = board[:empty] + board[move] + board[empty+1:]
-    #         board = board[:move] + EMPTY + board[move+1:]
-    #     return board
-        # lbrd = list(board)
-        # lbrd[empty], lbrd[mov] = lbrd[mov], lbrd[empty]
-        # return "".join(lbrd)
+    def makeMove(self, move):
+        empty = self.findEmpty()
+        if move in self.legal_moves[empty]:
+            tmp_piece = self.puzzle[move]
+            tmp_rect = tmp_piece['tile'].rect
+            tmp_piece['tile'].rect = self.puzzle[empty]['tile'].rect
+            # Make piece moving empty
+            self.puzzle[move] = self.puzzle[empty]
+            self.puzzle[move]['tile'].rect = tmp_rect
+            # Fill empty with moving piece
+            self.puzzle[empty] = tmp_piece
 
 # def cost(board, depth):
 #     # estimate future cost by sum of tile displacements

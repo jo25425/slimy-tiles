@@ -3,9 +3,26 @@ import pygame_sdl2 as pygame
 from Tile import Tile
 from Board import Board, EMPTY
 
+'''
+Important: For now, the input part of this only works for up to 3 tiles per row!
+In the future, will need to label possible moves and take those labels as input.
+'''
+
 if not pygame.font:
     print('Warning: Pygame fonts disabled.')
 
+KEY_TO_INT = {
+    pygame.K_0: 0,
+    pygame.K_1: 1,
+    pygame.K_2: 2,
+    pygame.K_3: 3,
+    pygame.K_4: 4,
+    pygame.K_5: 5,
+    pygame.K_6: 6,
+    pygame.K_7: 7,
+    pygame.K_8: 8,
+    pygame.K_9: 9
+}
 GRID_COLOR = (255, 255, 0)
 TEXT_COLOR = (150, 220, 100)
 GRID_THICKNESS = 2
@@ -54,7 +71,6 @@ class SlimyTiles:
 
         # Try out getting valid moves
         empty_slot, valid_moves = self.board.getMoves()
-        print(empty_slot, valid_moves)
         self.board.printPuzzle()
 
         # The main game loop contains all in-game actions
@@ -63,10 +79,23 @@ class SlimyTiles:
 
             # Event handling
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+
+                if event.type == pygame.QUIT \
+                   or event.type == pygame.KEYDOWN \
+                   and event.key == pygame.K_ESCAPE:
                     sys.exit()
 
-            # Rendering
+                if event.type == pygame.KEYDOWN \
+                   and event.key in KEY_TO_INT \
+                   and KEY_TO_INT[event.key] in valid_moves:
+                        move = KEY_TO_INT[event.key]
+                        self.board.makeMove(move)
+
+                        empty_slot, valid_moves = self.board.getMoves()
+                        self.board.printPuzzle()
+                        changed = True
+
+            # Rendering, if refresh needed
             if changed:
                 self.render(valid_moves)
                 changed = False
